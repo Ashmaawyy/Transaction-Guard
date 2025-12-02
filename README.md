@@ -22,22 +22,22 @@ The pipeline is organized into three distinct layers: Ingestion, Processing, and
 
 ```mermaid
 graph TD
-    subgraph Ingestion Layer
-        A[<b>Faker Producer</b><br/>(Python/Pydantic)] -->|Sends Avro Events| B(<b>Apache Kafka</b>)
-        SR[<b>Schema Registry</b>] -.->|Validates Schema| B
+    subgraph IngestionLayer[Ingestion Layer]
+        A["**Faker Producer**\n(Python/Pydantic)"] -->|Sends Avro Events| B["**Apache Kafka**"]
+        SR["**Schema Registry**"] -.->|Validates Schema| B
     end
 
-    subgraph Processing Layer (Spark Streaming)
-        B -->|Consumes Events| C{<b>Spark Structured Streaming</b><br/>(PySpark)}
-        C -->|Reads/Writes History| S[(<b>In-Memory State</b><br/>Sliding Windows)]
+    subgraph ProcessingLayer[Spark Streaming Processing Layer]
+        B -->|Consumes Events| C{"**Spark Structured Streaming**\n(PySpark)"}
+        C -->|Reads/Writes History| S["**In-Memory State**\nSliding Windows"]
         S -->|Updates State| C
-        C -->|Applies Fraud Rules| D[<b>Fraud/Valid Flag</b>]
+        C -->|Applies Fraud Rules| D["**Fraud/Valid Flag**"]
     end
 
-    subgraph Serving & Visualization
-        D -->|Valid Txns| E[(<b>S3 Data Lake</b><br/>Batch Storage)]
-        D -->|Fraud Alerts| F[(<b>Redis Cache</b><br/>Low Latency Serving)]
-        F -->|Reads Real-Time| G[<b>Grafana Dashboard</b>]
+    subgraph ServingLayer[Serving & Visualization]
+        D -->|Valid Txns| E["**S3 Data Lake**\nBatch Storage"]
+        D -->|Fraud Alerts| F["**Redis Cache**\nLow Latency Serving"]
+        F -->|Reads Real-Time| G["**Grafana Dashboard**"]
     end
 ```
 
