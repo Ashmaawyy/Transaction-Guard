@@ -1,0 +1,11 @@
+# Core Data Pipelining and I/O
+pyspark==3.5.0               # The core engine for stream processing
+kafka-python==2.0.2          # Python client for the Kafka Producer
+redis==5.0.1                 # Python client for the Redis serving layer
+
+# Data Modeling and Generation
+pydantic==2.5.3              # For schema validation (used in utils/model.py)
+Faker==23.1.0                # For generating realistic mock data in producer.py
+
+# Utilities
+haversine==2.8.0             # To easily calculate the Haversine distance for fraud detection (utils/helpers.py)
