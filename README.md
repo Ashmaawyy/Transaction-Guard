@@ -6,7 +6,7 @@ The **Transaction Guard** is an end-to-end, real-time data engineering project d
 
 This project is built to showcase mastery of **event-driven architecture**, **stateful stream processing**, and **infrastructure-as-code**.
 
------
+---
 
 ## 🏗️ Architecture and Data Flow
 
@@ -14,32 +14,67 @@ The pipeline is organized into three distinct layers: Ingestion, Processing, and
 
 ### Key Architectural Features
 
-  * **Event-Driven:** The system reacts immediately to incoming transactions rather than relying on scheduled jobs.
-  * **Stateful Processing:** The Spark application maintains the history (state) of each user's recent transactions to enable cross-event analysis (e.g., checking location changes).
-  * **Schema Enforcement:** Kafka is paired with a Schema Registry to enforce a rigid data contract (Avro/Pydantic), guaranteeing data quality upstream.
+* **Event-Driven:** The system reacts immediately to incoming transactions rather than relying on scheduled jobs.
+* **Stateful Processing:** The Spark application maintains the history (state) of each user's recent transactions to enable cross-event analysis (e.g., checking location changes).
+* **Schema Enforcement:** Kafka is paired with a Schema Registry to enforce a rigid data contract (Avro/Pydantic), guaranteeing data quality upstream.
 
 ### Pipeline Diagram
 
 ```mermaid
 graph TD
-    subgraph Ingestion Layer
-        A[<b>Faker Producer</b><br/>(Python/Pydantic)] -->|Sends Avro Events| B(<b>Apache Kafka</b>)
-        SR[<b>Schema Registry</b>] -.->|Validates Schema| B
+    subgraph IngestionLayer[Ingestion Layer]
+        A["**Faker Producer**\n(Python/Pydantic)"] -->|Sends Avro Events| B["**Apache Kafka**"]
+        SR["**Schema Registry**"] -.->|Validates Schema| B
     end
 
-    subgraph Processing Layer (Spark Streaming)
-        B -->|Consumes Events| C{<b>Spark Structured Streaming</b><br/>(PySpark)}
-        C -->|Reads/Writes History| S[(<b>In-Memory State</b><br/>Sliding Windows)]
+    subgraph ProcessingLayer[Spark Streaming Processing Layer]
+        B -->|Consumes Events| C{"**Spark Structured Streaming**\n(PySpark)"}
+        C -->|Reads/Writes History| S["**In-Memory State**\nSliding Windows"]
         S -->|Updates State| C
-        C -->|Applies Fraud Rules| D[<b>Fraud/Valid Flag</b>]
+        C -->|Applies Fraud Rules| D["**Fraud/Valid Flag**"]
     end
 
-    subgraph Serving & Visualization
-        D -->|Valid Txns| E[(<b>S3 Data Lake</b><br/>Batch Storage)]
-        D -->|Fraud Alerts| F[(<b>Redis Cache</b><br/>Low Latency Serving)]
-        F -->|Reads Real-Time| G[<b>Grafana Dashboard</b>]
+    subgraph ServingLayer[Serving & Visualization]
+        D -->|Valid Txns| E["**S3 Data Lake**\nBatch Storage"]
+        D -->|Fraud Alerts| F["**Redis Cache**\nLow Latency Serving"]
+        D -->|Fraud Alerts| G["**Grafana Dashboard**"]
     end
+````
+
+-----
+
+## 📁 Project File Architecture
+
+The project is structured to separate configuration, core logic, and utility functions for modularity and maintainability.
+
 ```
+transaction_guard/
+├── .gitignore
+├── README.md
+├── requirements.txt
+├── docker-compose.yaml
+├── producer.py
+├── processor.py
+└── utils/
+    ├── __init__.py
+    ├── model.py
+    ├── helpers.py
+    └── spark_session.py
+```
+
+### 📄 Component Descriptions
+
+| File/Folder | Purpose | Details |
+| :--- | :--- | :--- |
+| `README.md` | **Documentation & Overview** | This file; describes architecture, setup, and core challenges. |
+| `requirements.txt` | **Dependencies** | Lists all required Python packages for the producer and processor. |
+| `docker-compose.yaml` | **Infrastructure Setup** | Defines and connects the distributed services: **Zookeeper**, **Kafka Broker**, and **Schema Registry**. |
+| `producer.py` | **Data Ingestion** | The Python script that uses `Faker` to generate high-volume, mock financial transactions and sends them to Kafka. |
+| `processor.py` | **Stream Processing Logic** | The main **PySpark Structured Streaming** job. Handles consumption from Kafka, stateful windowing, and fraud rule application. |
+| `utils/` | **Helper Modules** | Directory containing reusable code to keep the main scripts clean. |
+| `utils/model.py` | **Data Contract** | Contains the **Pydantic** `Transaction` class, enforcing schema validation for all incoming data. |
+| `utils/helpers.py` | **Business Logic Utilities** | Houses pure, reusable functions like the **Haversine Distance** calculation for geospatial fraud detection. |
+| `utils/spark_session.py` | **Initialization** | Helper function to initialize a new **SparkSession**, including necessary Kafka and Avro packages. |
 
 -----
 
@@ -60,7 +95,7 @@ graph TD
 
 The core data contract is defined by the `Transaction` Pydantic model. This ensures every event is structured, strongly typed, and passes initial validation checks (e.g., amount must be positive).
 
-**File:** `model.py`
+**File:** `utils/model.py`
 
 ```python
 from pydantic import BaseModel, Field
@@ -98,7 +133,7 @@ Use the provided `docker-compose.yaml` (which includes Zookeeper, Kafka, and Sch
 
 ```bash
 # Clone the repository
-git clone https://github.com/Ashmaawyy/transaction-guard.git
+git clone [https://github.com/Ashmaawyy/transaction-guard.git](https://github.com/Ashmaawyy/transaction-guard.git)
 cd transaction-guard
 
 # Start all services in detached mode
@@ -138,9 +173,11 @@ Connect Grafana to the Redis cache to visualize any flagged fraudulent transacti
 
 ## 🔑 Key Engineering Challenges
 
-This project specifically targets and solves advanced data engineering challenges:
+This project specifically targets and solves advanced data engineering problems:
 
 1.  **State Management:** Implementing Spark Structured Streaming's **`mapGroupsWithState`** or time-windowing to track historical user activity (e.g., transactions per minute).
 2.  **Geospatial Fraud:** Calculating the **Haversine Distance** between the user's current and previous transaction location to detect "impossible speed" travel.
 3.  **Backpressure Handling:** Configuring Kafka and Spark to ensure the processor doesn't crash when data ingestion spikes.
 4.  **Schema Evolution:** Designing the pipeline to handle changes to the `Transaction` schema gracefully via the Schema Registry.
+
+<!-- end list -->
