@@ -55,6 +55,11 @@ transaction_guard/
 ├── docker-compose.yaml
 ├── producer.py
 ├── processor.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_model.py
+│   ├── test_helpers.py
+│   └── test_spark_processor.py
 └── utils/
     ├── __init__.py
     ├── model.py
@@ -71,6 +76,10 @@ transaction_guard/
 | `docker-compose.yaml` | **Infrastructure Setup** | Defines and connects the distributed services: **Zookeeper**, **Kafka Broker**, and **Schema Registry**. |
 | `producer.py` | **Data Ingestion** | The Python script that uses `Faker` to generate high-volume, mock financial transactions and sends them to Kafka. |
 | `processor.py` | **Stream Processing Logic** | The main **PySpark Structured Streaming** job. Handles consumption from Kafka, stateful windowing, and fraud rule application. |
+| `tests/` | **Test Suite Directory** | Contains all unit and integration tests for the project. |
+| `tests/test_model.py` | **Model Unit Tests** | Verifies that the Pydantic `Transaction` schema correctly **passes** valid data and **rejects** invalid data (e.g., negative amounts, out-of-range coordinates). |
+| `tests/test_helpers.py` | **Helper Unit Tests** | Verifies the accuracy of the `haversine_distance_km` and `check_impossible_speed` functions, ensuring the core fraud logic is correct. |
+| `tests/test_spark_processor.py` | **Spark Integration Tests** | Verifies the core streaming logic: reading mocked data, applying **stateful logic** (Haversine/speed check), and correctly outputting the fraud flag. This test will use a simulated memory source for fast, isolated testing of the PySpark transformations. |
 | `utils/` | **Helper Modules** | Directory containing reusable code to keep the main scripts clean. |
 | `utils/model.py` | **Data Contract** | Contains the **Pydantic** `Transaction` class, enforcing schema validation for all incoming data. |
 | `utils/helpers.py` | **Business Logic Utilities** | Houses pure, reusable functions like the **Haversine Distance** calculation for geospatial fraud detection. |
